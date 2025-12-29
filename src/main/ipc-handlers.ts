@@ -68,7 +68,8 @@ export function setupIPCHandlers(): void {
   });
 
   // Recording data transfer
-  ipcMain.on(IPC_CHANNELS.RECORDING_DATA_CHUNK, (_event, chunk: ArrayBuffer) => {
+  // Receives Uint8Array from renderer (Uint8Array serializes properly over IPC, ArrayBuffer doesn't)
+  ipcMain.on(IPC_CHANNELS.RECORDING_DATA_CHUNK, (_event, chunk: Uint8Array) => {
     handleRecordingChunk(chunk);
   });
 

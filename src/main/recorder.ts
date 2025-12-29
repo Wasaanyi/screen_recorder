@@ -224,17 +224,20 @@ export async function resumeRecording(): Promise<void> {
 
 /**
  * Handle video chunks received from the renderer process
- * Chunks are sent from MediaRecorder in the renderer
+ * Chunks are sent from MediaRecorder in the renderer as Uint8Array
+ * (Uint8Array is used instead of ArrayBuffer for proper IPC serialization)
  */
-export function handleRecordingChunk(chunk: ArrayBuffer): void {
+export function handleRecordingChunk(chunk: Uint8Array | ArrayBuffer): void {
   if (!recordingState.isRecording || !fileStream) {
     console.warn('Received chunk but not recording or no file stream');
     return;
   }
 
   try {
-    // Convert ArrayBuffer to Buffer
+    // Convert Uint8Array or ArrayBuffer to Buffer
     const buffer = Buffer.from(chunk);
+
+    console.log(`Writing chunk: ${buffer.byteLength} bytes`);
 
     // Write chunk to file stream
     fileStream.write(buffer, (error) => {
