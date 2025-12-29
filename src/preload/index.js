@@ -84,6 +84,36 @@ const api = {
     return () => ipcRenderer.removeListener(IPC_CHANNELS.RECORDING_ERROR, listener);
   },
 
+  // MediaRecorder control listeners
+  onStartMediaRecorder: (callback) => {
+    const listener = (_event, data) => callback(data);
+    ipcRenderer.on(IPC_CHANNELS.START_MEDIA_RECORDER, listener);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.START_MEDIA_RECORDER, listener);
+  },
+
+  onStopMediaRecorder: (callback) => {
+    const listener = (_event) => callback();
+    ipcRenderer.on(IPC_CHANNELS.STOP_MEDIA_RECORDER, listener);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.STOP_MEDIA_RECORDER, listener);
+  },
+
+  onPauseMediaRecorder: (callback) => {
+    const listener = (_event) => callback();
+    ipcRenderer.on(IPC_CHANNELS.PAUSE_MEDIA_RECORDER, listener);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.PAUSE_MEDIA_RECORDER, listener);
+  },
+
+  onResumeMediaRecorder: (callback) => {
+    const listener = (_event) => callback();
+    ipcRenderer.on(IPC_CHANNELS.RESUME_MEDIA_RECORDER, listener);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.RESUME_MEDIA_RECORDER, listener);
+  },
+
+  // Send recording data chunk to main process
+  sendRecordingChunk: (chunk) => {
+    ipcRenderer.send(IPC_CHANNELS.RECORDING_DATA_CHUNK, chunk);
+  },
+
   // Webcam controls
   toggleWebcam: (enabled) =>
     ipcRenderer.invoke(IPC_CHANNELS.TOGGLE_WEBCAM, enabled),
