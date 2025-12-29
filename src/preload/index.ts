@@ -68,7 +68,8 @@ const api = {
   },
 
   // Send recording data chunk to main process
-  sendRecordingChunk: (chunk: ArrayBuffer): void => {
+  // Using Uint8Array instead of ArrayBuffer for proper IPC serialization
+  sendRecordingChunk: (chunk: Uint8Array): void => {
     ipcRenderer.send(IPC_CHANNELS.RECORDING_DATA_CHUNK, chunk);
   },
 

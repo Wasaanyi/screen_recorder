@@ -111,10 +111,13 @@ export function useMediaRecorder() {
         if (event.data && event.data.size > 0) {
           console.log(`Chunk received: ${event.data.size} bytes`);
 
-          // Convert blob to ArrayBuffer and send to main process
+          // Convert blob to ArrayBuffer then to Uint8Array for proper IPC serialization
+          // ArrayBuffer doesn't serialize correctly over Electron IPC, but Uint8Array does
           event.data.arrayBuffer().then((arrayBuffer) => {
             if (window.electronAPI?.sendRecordingChunk) {
-              window.electronAPI.sendRecordingChunk(arrayBuffer);
+              const uint8Array = new Uint8Array(arrayBuffer);
+              console.log(`Sending chunk: ${uint8Array.byteLength} bytes`);
+              window.electronAPI.sendRecordingChunk(uint8Array);
             }
           }).catch((error) => {
             console.error('Error converting chunk to ArrayBuffer:', error);

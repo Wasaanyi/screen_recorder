@@ -27,7 +27,7 @@ export interface ElectronAPI {
   onStopMediaRecorder: (callback: () => void) => () => void;
   onPauseMediaRecorder: (callback: () => void) => () => void;
   onResumeMediaRecorder: (callback: () => void) => () => void;
-  sendRecordingChunk: (chunk: ArrayBuffer) => void;
+  sendRecordingChunk: (chunk: Uint8Array) => void;
 
   // Webcam controls
   toggleWebcam: (enabled: boolean) => Promise<void>;
