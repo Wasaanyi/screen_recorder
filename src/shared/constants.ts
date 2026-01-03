@@ -52,7 +52,12 @@ export const DEFAULT_SETTINGS = {
   audioSource: null,
   microphoneSource: null,
   includeSystemAudio: true,
-  includeMicrophone: false
+  includeMicrophone: false,
+  includeWebcam: false,
+  webcamDeviceId: null,
+  webcamPosition: 'bottom-right' as const,
+  webcamSize: 15,
+  webcamShape: 'circle' as const
 };
 
 export const ANNOTATION_COLORS = [

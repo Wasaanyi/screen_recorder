@@ -1,14 +1,31 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 interface LivePreviewProps {
   sourceId: string | null;
   isRecording: boolean;
+  webcamEnabled: boolean;
+  webcamDeviceId: string | null;
+  webcamPosition?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  webcamSize?: number;
+  webcamShape?: 'circle' | 'square';
 }
 
-const LivePreview: React.FC<LivePreviewProps> = ({ sourceId, isRecording }) => {
+const LivePreview: React.FC<LivePreviewProps> = ({
+  sourceId,
+  isRecording: _isRecording,
+  webcamEnabled,
+  webcamDeviceId,
+  webcamPosition = 'bottom-right',
+  webcamSize = 15,
+  webcamShape = 'circle',
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const webcamRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const webcamStreamRef = useRef<MediaStream | null>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
+  // Handle screen source stream
   useEffect(() => {
     if (!sourceId) {
       if (streamRef.current) {
@@ -18,6 +35,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({ sourceId, isRecording }) => {
       if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
+      setVideoLoaded(false);
       return;
     }
 
@@ -40,6 +58,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({ sourceId, isRecording }) => {
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          setVideoLoaded(true);
         }
       } catch (error) {
         console.error('Preview error:', error);
@@ -56,6 +75,83 @@ const LivePreview: React.FC<LivePreviewProps> = ({ sourceId, isRecording }) => {
     };
   }, [sourceId]);
 
+  // Handle webcam stream
+  useEffect(() => {
+    if (!webcamEnabled) {
+      if (webcamStreamRef.current) {
+        webcamStreamRef.current.getTracks().forEach(track => track.stop());
+        webcamStreamRef.current = null;
+      }
+      if (webcamRef.current) {
+        webcamRef.current.srcObject = null;
+      }
+      return;
+    }
+
+    const getWebcamStream = async () => {
+      try {
+        const constraints: MediaStreamConstraints = {
+          video: webcamDeviceId
+            ? { deviceId: { exact: webcamDeviceId }, width: { ideal: 640 }, height: { ideal: 480 } }
+            : { width: { ideal: 640 }, height: { ideal: 480 } },
+          audio: false
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        webcamStreamRef.current = stream;
+
+        if (webcamRef.current) {
+          webcamRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error('Webcam preview error:', error);
+      }
+    };
+
+    getWebcamStream();
+
+    return () => {
+      if (webcamStreamRef.current) {
+        webcamStreamRef.current.getTracks().forEach(track => track.stop());
+        webcamStreamRef.current = null;
+      }
+    };
+  }, [webcamEnabled, webcamDeviceId]);
+
+  // Calculate webcam position styles
+  const getWebcamStyles = (): React.CSSProperties => {
+    const size = `${webcamSize}%`;
+    const padding = '20px';
+
+    const baseStyles: React.CSSProperties = {
+      position: 'absolute',
+      width: size,
+      aspectRatio: '1',
+      border: '3px solid #3b82f6',
+      overflow: 'hidden',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+    };
+
+    if (webcamShape === 'circle') {
+      baseStyles.borderRadius = '50%';
+    } else {
+      baseStyles.borderRadius = '8px';
+    }
+
+    switch (webcamPosition) {
+      case 'bottom-right':
+        return { ...baseStyles, bottom: padding, right: padding };
+      case 'bottom-left':
+        return { ...baseStyles, bottom: padding, left: padding };
+      case 'top-right':
+        return { ...baseStyles, top: padding, right: padding };
+      case 'top-left':
+        return { ...baseStyles, top: padding, left: padding };
+      default:
+        return { ...baseStyles, bottom: padding, right: padding };
+    }
+  };
+
   if (!sourceId) {
     return (
       <div className="preview-container">
@@ -71,18 +167,29 @@ const LivePreview: React.FC<LivePreviewProps> = ({ sourceId, isRecording }) => {
 
   return (
     <div className="preview-container">
-      <video
-        ref={videoRef}
-        autoPlay
-        muted
-        className="max-w-full max-h-full"
-      />
-      {isRecording && (
-        <div className="absolute top-4 left-4 bg-danger px-3 py-1 rounded-full flex items-center space-x-2">
-          <div className="recording-indicator" />
-          <span className="text-white text-sm font-medium">Recording</span>
-        </div>
-      )}
+      {/* Main video preview */}
+      <div className="relative inline-block max-w-full max-h-full">
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          className="max-w-full max-h-full rounded-lg"
+        />
+
+        {/* Webcam overlay preview */}
+        {webcamEnabled && videoLoaded && (
+          <div style={getWebcamStyles()}>
+            <video
+              ref={webcamRef}
+              autoPlay
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+              style={{ transform: 'scaleX(-1)' }}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

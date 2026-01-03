@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { ScreenSource } from '../../../shared/types';
 
 interface SourceSelectorProps {
-  onSourceSelect: (sourceId: string) => void;
+  onSourceSelect: (sourceId: string, displayId?: string) => void;
   selectedSourceId: string | null;
 }
 
@@ -70,7 +70,7 @@ const SourceSelector: React.FC<SourceSelectorProps> = ({ onSourceSelect, selecte
         {filteredSources.map((source) => (
           <div
             key={source.id}
-            onClick={() => onSourceSelect(source.id)}
+            onClick={() => onSourceSelect(source.id, source.display_id)}
             className={'border-2 rounded-lg p-3 cursor-pointer transition-all ' + (selectedSourceId === source.id ? 'border-primary bg-primary/10' : 'border-dark-border hover:border-primary/50')}
           >
             <div className="flex items-center space-x-3">

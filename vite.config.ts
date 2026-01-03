@@ -16,7 +16,7 @@ export default defineConfig({
           build: {
             outDir: 'dist-electron/main',
             rollupOptions: {
-              external: ['electron', 'fluent-ffmpeg', 'ffmpeg-static', 'electron-squirrel-startup'],
+              external: ['electron', 'fluent-ffmpeg', 'ffmpeg-static', 'ffprobe-static', 'electron-squirrel-startup'],
               output: {
                 format: 'es',
                 entryFileNames: '[name].js'

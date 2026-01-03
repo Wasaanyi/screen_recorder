@@ -9,7 +9,6 @@ if (squirrelStartup) {
   app.quit();
 }
 
-let tray: any = null;
 
 async function initialize() {
   // Set up IPC handlers
@@ -19,7 +18,7 @@ async function initialize() {
   createControlWindow();
 
   // Create system tray
-  tray = createTray();
+  createTray();
 }
 
 // This method will be called when Electron has finished

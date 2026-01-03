@@ -14,6 +14,12 @@ export interface RecordingSettings {
   microphoneSource: string | null;
   includeSystemAudio: boolean;
   includeMicrophone: boolean;
+  // Webcam overlay settings
+  includeWebcam: boolean;
+  webcamDeviceId: string | null;
+  webcamPosition: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  webcamSize: number; // Size as percentage of video width (e.g., 20 = 20%)
+  webcamShape: 'circle' | 'square';
 }
 
 export interface RecordingState {

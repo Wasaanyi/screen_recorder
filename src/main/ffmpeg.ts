@@ -1,12 +1,47 @@
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegStatic from 'ffmpeg-static';
+import ffprobeStatic from 'ffprobe-static';
 import type { RecordingSettings, TrimSettings } from '../shared/types';
 import { VIDEO_QUALITY_PRESETS } from '../shared/constants';
 import { existsSync, statSync, readSync, openSync, closeSync } from 'fs';
 
+// Get binary path - handle both development and packaged app
+function getBinaryPath(staticPath: string | null, binaryName: string): string | null {
+  // In development, use static path directly
+  if (staticPath && existsSync(staticPath)) {
+    console.log(`Using ${binaryName} path:`, staticPath);
+    return staticPath;
+  }
+
+  // In packaged app, path needs adjustment
+  if (staticPath) {
+    const unpackedPath = staticPath.replace('app.asar', 'app.asar.unpacked');
+    if (existsSync(unpackedPath)) {
+      console.log(`Using unpacked ${binaryName} path:`, unpackedPath);
+      return unpackedPath;
+    }
+  }
+
+  console.error(`${binaryName} not found at:`, staticPath);
+  return null;
+}
+
 // Set FFmpeg path
-if (ffmpegStatic) {
-  ffmpeg.setFfmpegPath(ffmpegStatic);
+const ffmpegPath = getBinaryPath(ffmpegStatic, 'ffmpeg');
+if (ffmpegPath) {
+  ffmpeg.setFfmpegPath(ffmpegPath);
+  console.log('FFmpeg path set successfully');
+} else {
+  console.error('Could not find FFmpeg binary');
+}
+
+// Set FFprobe path
+const ffprobePath = getBinaryPath(ffprobeStatic.path, 'ffprobe');
+if (ffprobePath) {
+  ffmpeg.setFfprobePath(ffprobePath);
+  console.log('FFprobe path set successfully');
+} else {
+  console.error('Could not find FFprobe binary');
 }
 
 /**
@@ -145,7 +180,7 @@ export async function processVideoWithFFmpeg(
 
         resolve();
       })
-      .on('error', (err, stdout, stderr) => {
+      .on('error', (err, _stdout, stderr) => {
         console.error('FFmpeg error:', err.message);
         console.error('FFmpeg stderr:', stderr);
         reject(err);

@@ -1,6 +1,5 @@
 import { Tray, Menu, app, nativeImage } from 'electron';
 import { createControlWindow } from './windows';
-import { join } from 'path';
 
 let tray: Tray | null = null;
 

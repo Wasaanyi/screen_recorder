@@ -1,4 +1,4 @@
-import { getControlWindow } from './windows';
+import { getControlWindow, showRecordingBorder, closeRecordingBorder } from './windows';
 import { IPC_CHANNELS } from '../shared/ipc-channels';
 import type { RecordingSettings, RecordingState } from '../shared/types';
 import { processVideoWithFFmpeg } from './ffmpeg';
@@ -13,29 +13,44 @@ let recordingState: RecordingState = {
 };
 
 let recordingInterval: NodeJS.Timeout | null = null;
-let currentSourceId: string | null = null;
 let currentSettings: RecordingSettings | null = null;
 let fileStream: WriteStream | null = null;
 let recordedChunks: Buffer[] = [];
+let currentSourceId: string | null = null;
+let currentDisplayId: string | null = null;
 
 function notifyStateChanged() {
   const controlWindow = getControlWindow();
   if (controlWindow && !controlWindow.isDestroyed()) {
-    controlWindow.webContents.send(IPC_CHANNELS.RECORDING_STATE_CHANGED, recordingState);
+    try {
+      controlWindow.webContents.send(IPC_CHANNELS.RECORDING_STATE_CHANGED, recordingState);
+    } catch (err) {
+      // Window might be in process of closing, ignore the error
+      console.warn('Could not send state change:', err);
+    }
   }
 }
 
 function notifyError(error: string) {
   const controlWindow = getControlWindow();
   if (controlWindow && !controlWindow.isDestroyed()) {
-    controlWindow.webContents.send(IPC_CHANNELS.RECORDING_ERROR, error);
+    try {
+      controlWindow.webContents.send(IPC_CHANNELS.RECORDING_ERROR, error);
+    } catch (err) {
+      // Window might be in process of closing, ignore the error
+      console.warn('Could not send error notification:', err);
+    }
   }
 }
 
-export async function startRecording(sourceId: string, settings: RecordingSettings): Promise<void> {
+export async function startRecording(sourceId: string, settings: RecordingSettings, displayId?: string): Promise<void> {
   if (recordingState.isRecording) {
     throw new Error('Recording already in progress');
   }
+
+  // Store source info for border display
+  currentSourceId = sourceId;
+  currentDisplayId = displayId || null;
 
   try {
     // Ensure output directory exists
@@ -48,7 +63,6 @@ export async function startRecording(sourceId: string, settings: RecordingSettin
     const tempOutputFile = join(settings.outputPath, `recording-${timestamp}.webm`);
     const finalOutputFile = join(settings.outputPath, `recording-${timestamp}.mp4`);
 
-    currentSourceId = sourceId;
     currentSettings = settings;
     recordedChunks = []; // Reset chunks array
 
@@ -79,6 +93,9 @@ export async function startRecording(sourceId: string, settings: RecordingSettin
       });
     }
 
+    // Show red border around the recording source
+    showRecordingBorder(sourceId, currentDisplayId || undefined);
+
     notifyStateChanged();
 
     console.log('Recording started:', { sourceId, tempOutputFile, finalOutputFile });
@@ -95,6 +112,9 @@ export async function stopRecording(): Promise<string> {
   }
 
   try {
+    // Close the recording border
+    closeRecordingBorder();
+
     // Tell the renderer to stop MediaRecorder
     const controlWindow = getControlWindow();
     if (controlWindow && !controlWindow.isDestroyed()) {
@@ -180,7 +200,6 @@ export async function stopRecording(): Promise<string> {
 
     notifyStateChanged();
 
-    currentSourceId = null;
     currentSettings = null;
     recordedChunks = [];
 
@@ -235,7 +254,9 @@ export function handleRecordingChunk(chunk: Uint8Array | ArrayBuffer): void {
 
   try {
     // Convert Uint8Array or ArrayBuffer to Buffer
-    const buffer = Buffer.from(chunk);
+    const buffer = chunk instanceof ArrayBuffer
+      ? Buffer.from(new Uint8Array(chunk))
+      : Buffer.from(chunk);
 
     console.log(`Writing chunk: ${buffer.byteLength} bytes`);
 

@@ -1,4 +1,4 @@
-import { ipcMain, desktopCapturer, dialog } from 'electron';
+import { ipcMain, desktopCapturer, dialog, BrowserWindow } from 'electron';
 import { IPC_CHANNELS } from '../shared/ipc-channels';
 import { startRecording, stopRecording, pauseRecording, resumeRecording, handleRecordingChunk } from './recorder';
 import { createOverlayWindow, createWebcamWindow, closeOverlayWindow, closeWebcamWindow, createEditorWindow } from './windows';
@@ -13,7 +13,12 @@ let currentSettings: RecordingSettings = {
   audioSource: null,
   microphoneSource: null,
   includeSystemAudio: true,
-  includeMicrophone: false
+  includeMicrophone: false,
+  includeWebcam: false,
+  webcamDeviceId: null,
+  webcamPosition: 'bottom-right',
+  webcamSize: 15,
+  webcamShape: 'circle'
 };
 
 export function setupIPCHandlers(): void {
@@ -39,10 +44,10 @@ export function setupIPCHandlers(): void {
   });
 
   // Recording controls
-  ipcMain.handle(IPC_CHANNELS.START_RECORDING, async (_event, sourceId: string, settings: RecordingSettings) => {
+  ipcMain.handle(IPC_CHANNELS.START_RECORDING, async (_event, sourceId: string, settings: RecordingSettings, displayId?: string) => {
     try {
       currentSettings = { ...currentSettings, ...settings };
-      await startRecording(sourceId, currentSettings);
+      await startRecording(sourceId, currentSettings, displayId);
     } catch (error) {
       console.error('Error starting recording:', error);
       throw error;
@@ -150,12 +155,12 @@ export function setupIPCHandlers(): void {
 
   // Window management
   ipcMain.on(IPC_CHANNELS.MINIMIZE_WINDOW, (event) => {
-    const window = event.sender.getOwnerBrowserWindow();
+    const window = BrowserWindow.fromWebContents(event.sender);
     window?.minimize();
   });
 
   ipcMain.on(IPC_CHANNELS.MAXIMIZE_WINDOW, (event) => {
-    const window = event.sender.getOwnerBrowserWindow();
+    const window = BrowserWindow.fromWebContents(event.sender);
     if (window?.isMaximized()) {
       window.unmaximize();
     } else {
@@ -164,7 +169,7 @@ export function setupIPCHandlers(): void {
   });
 
   ipcMain.on(IPC_CHANNELS.CLOSE_WINDOW, (event) => {
-    const window = event.sender.getOwnerBrowserWindow();
+    const window = BrowserWindow.fromWebContents(event.sender);
     window?.close();
   });
 }

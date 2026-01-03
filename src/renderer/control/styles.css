@@ -63,16 +63,29 @@ body {
   @apply bg-dark-panel text-dark-text hover:bg-dark-hover border border-dark-border focus:ring-primary;
 }
 
-/* Toolbar Button Styling */
-.toolbar-button {
-  @apply px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium transition-all duration-200 bg-dark-panel text-dark-text hover:bg-dark-hover border border-dark-border focus:outline-none focus:ring-2 focus:ring-primary;
+/* Toolbar Button with Text */
+.toolbar-button-with-text {
+  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-dark-panel text-dark-text hover:bg-dark-hover border border-dark-border focus:outline-none focus:ring-2 focus:ring-primary flex items-center gap-2;
 }
 
-.toolbar-button.active {
+.toolbar-button-with-text.active {
   @apply bg-primary text-white border-primary;
 }
 
-.toolbar-button:disabled {
+.toolbar-button-with-text:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Toolbar Icon-only Button */
+.toolbar-button-icon {
+  @apply px-3 py-2 rounded-lg transition-all duration-200 bg-dark-panel text-dark-text hover:bg-dark-hover border border-dark-border focus:outline-none focus:ring-2 focus:ring-primary;
+}
+
+.toolbar-button-icon.active {
+  @apply bg-primary text-white border-primary;
+}
+
+.toolbar-button-icon:disabled {
   @apply opacity-50 cursor-not-allowed;
 }
 
@@ -156,4 +169,51 @@ body {
 
 .dropdown-item.selected {
   @apply bg-primary/20 text-primary;
+}
+
+/* Device Icon Button (Webcam/Mic) - wider for easier clicking */
+.device-icon-button {
+  @apply px-4 py-2 rounded-l-lg font-medium transition-all duration-200 bg-dark-panel text-dark-text hover:bg-dark-hover border border-dark-border border-r-0 focus:outline-none focus:ring-2 focus:ring-primary;
+}
+
+.device-icon-button.active {
+  @apply bg-primary text-white border-primary;
+}
+
+/* Device Dropdown Arrow Button */
+.device-dropdown-button {
+  @apply px-2 py-2 rounded-r-lg transition-all duration-200 bg-dark-panel text-dark-text hover:bg-dark-hover border border-dark-border border-l-0 focus:outline-none focus:ring-2 focus:ring-primary;
+}
+
+.device-dropdown-button.active {
+  @apply bg-primary/80 text-white border-primary;
+}
+
+.device-dropdown-button.open {
+  @apply bg-dark-hover;
+}
+
+.device-dropdown-button.active.open {
+  @apply bg-primary/60;
+}
+
+/* Recording indicator paused state */
+.recording-indicator.paused {
+  @apply bg-warning animate-none;
+}
+
+/* Red border pulse animation for recording */
+@keyframes pulseBorder {
+  0%, 100% {
+    border-color: rgba(239, 68, 68, 1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    border-color: rgba(239, 68, 68, 0.6);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+  }
+}
+
+.animate-pulse-border {
+  animation: pulseBorder 2s ease-in-out infinite;
 }

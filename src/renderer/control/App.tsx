@@ -4,7 +4,6 @@ import { DEFAULT_SETTINGS } from '../../shared/constants';
 import { useMediaRecorder } from './hooks/useMediaRecorder';
 import { useRecordingState } from './hooks/useRecordingState';
 import Toolbar from './components/Toolbar';
-import FloatingToolbar from './components/FloatingToolbar';
 import LivePreview from './components/LivePreview';
 import RightPanel from './components/RightPanel';
 import SourceSelector from './components/SourceSelector';
@@ -12,6 +11,7 @@ import Settings from './components/Settings';
 
 const App: React.FC = () => {
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
+  const [selectedDisplayId, setSelectedDisplayId] = useState<string | null>(null);
   const [settings, setSettings] = useState<RecordingSettings>(DEFAULT_SETTINGS);
   const [panelMode, setPanelMode] = useState<'source' | 'settings' | null>(null);
   const [webcamEnabled, setWebcamEnabled] = useState(false);
@@ -19,6 +19,7 @@ const App: React.FC = () => {
   const [annotateEnabled, setAnnotateEnabled] = useState(false);
   const [selectedWebcamDevice, setSelectedWebcamDevice] = useState<string | null>(null);
   const [selectedMicDevice, setSelectedMicDevice] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { isRecording, isPaused, duration } = useRecordingState();
   useMediaRecorder();
@@ -62,9 +63,12 @@ const App: React.FC = () => {
     try {
       const recordingSettings = {
         ...settings,
+        includeMicrophone: micEnabled,
         microphoneSource: selectedMicDevice,
+        includeWebcam: webcamEnabled,
+        webcamDeviceId: selectedWebcamDevice,
       };
-      await window.electronAPI.startRecording(selectedSourceId, recordingSettings);
+      await window.electronAPI.startRecording(selectedSourceId, recordingSettings, selectedDisplayId || undefined);
     } catch (error) {
       console.error('Error starting recording:', error);
       alert('Failed to start recording: ' + (error as Error).message);
@@ -73,9 +77,12 @@ const App: React.FC = () => {
 
   const handleStopRecording = async () => {
     try {
+      setIsProcessing(true);
       const outputFile = await window.electronAPI.stopRecording();
+      setIsProcessing(false);
       alert('Recording saved to: ' + outputFile);
     } catch (error) {
+      setIsProcessing(false);
       console.error('Error stopping recording:', error);
       alert('Failed to stop recording: ' + (error as Error).message);
     }
@@ -97,13 +104,16 @@ const App: React.FC = () => {
     }
   };
 
-  const handleToggleWebcam = async (enabled: boolean) => {
-    setWebcamEnabled(enabled);
-    try {
-      await window.electronAPI.toggleWebcam(enabled);
-    } catch (error) {
-      console.error('Error toggling webcam:', error);
+  const handlePauseResume = () => {
+    if (isPaused) {
+      handleResumeRecording();
+    } else {
+      handlePauseRecording();
     }
+  };
+
+  const handleToggleWebcam = (enabled: boolean) => {
+    setWebcamEnabled(enabled);
   };
 
   const handleToggleOverlay = async (enabled: boolean) => {
@@ -115,80 +125,80 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSourceSelect = (sourceId: string) => {
+  const handleSourceSelect = (sourceId: string, displayId?: string) => {
     setSelectedSourceId(sourceId);
+    setSelectedDisplayId(displayId || null);
     setPanelMode(null);
-  };
-
-  const handlePauseResume = () => {
-    if (isPaused) {
-      handleResumeRecording();
-    } else {
-      handlePauseRecording();
-    }
   };
 
   return (
     <div className="flex flex-col h-screen bg-dark-bg">
-      {!isRecording && (
-        <>
-          <Toolbar
-            isRecording={isRecording}
-            isPaused={isPaused}
-            duration={duration}
-            selectedSourceId={selectedSourceId}
-            webcamEnabled={webcamEnabled}
-            micEnabled={micEnabled}
-            annotateEnabled={annotateEnabled}
-            selectedWebcamDevice={selectedWebcamDevice}
-            selectedMicDevice={selectedMicDevice}
-            onSourceClick={() => setPanelMode(panelMode === 'source' ? null : 'source')}
-            onSettingsClick={() => setPanelMode(panelMode === 'settings' ? null : 'settings')}
-            onAnnotateToggle={handleToggleOverlay}
-            onWebcamToggle={handleToggleWebcam}
-            onMicToggle={setMicEnabled}
-            onWebcamDeviceSelect={setSelectedWebcamDevice}
-            onMicDeviceSelect={setSelectedMicDevice}
-            onStartRecording={handleStartRecording}
-            onStopRecording={handleStopRecording}
-          />
-          <div className="flex-1 relative">
-            <LivePreview sourceId={selectedSourceId} isRecording={false} />
+      {/* Processing overlay */}
+      {isProcessing && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-dark-panel rounded-xl p-8 text-center max-w-sm mx-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-dark-text mb-2">Processing Recording</h3>
+            <p className="text-dark-text-muted">
+              Please wait while your video is being processed and converted...
+            </p>
           </div>
-        </>
-      )}
-
-      {isRecording && (
-        <div className="flex items-center justify-center h-full">
-          <FloatingToolbar
-            duration={duration}
-            isPaused={isPaused}
-            webcamEnabled={webcamEnabled}
-            micEnabled={micEnabled}
-            annotateEnabled={annotateEnabled}
-            onPauseResume={handlePauseResume}
-            onStop={handleStopRecording}
-            onWebcamToggle={handleToggleWebcam}
-            onMicToggle={setMicEnabled}
-            onAnnotateToggle={handleToggleOverlay}
-          />
         </div>
       )}
 
-      <RightPanel mode={panelMode} onClose={() => setPanelMode(null)}>
-        {panelMode === 'source' && (
-          <SourceSelector
-            onSourceSelect={handleSourceSelect}
-            selectedSourceId={selectedSourceId}
-          />
-        )}
-        {panelMode === 'settings' && (
-          <Settings
-            settings={settings}
-            onUpdateSettings={handleUpdateSettings}
-          />
-        )}
-      </RightPanel>
+      {/* Toolbar - always visible */}
+      <Toolbar
+        isRecording={isRecording}
+        isPaused={isPaused}
+        duration={duration}
+        selectedSourceId={selectedSourceId}
+        webcamEnabled={webcamEnabled}
+        micEnabled={micEnabled}
+        annotateEnabled={annotateEnabled}
+        selectedWebcamDevice={selectedWebcamDevice}
+        selectedMicDevice={selectedMicDevice}
+        onSourceClick={() => setPanelMode(panelMode === 'source' ? null : 'source')}
+        onSettingsClick={() => setPanelMode(panelMode === 'settings' ? null : 'settings')}
+        onAnnotateToggle={handleToggleOverlay}
+        onWebcamToggle={handleToggleWebcam}
+        onMicToggle={setMicEnabled}
+        onWebcamDeviceSelect={setSelectedWebcamDevice}
+        onMicDeviceSelect={setSelectedMicDevice}
+        onStartRecording={handleStartRecording}
+        onStopRecording={handleStopRecording}
+        onPauseResume={handlePauseResume}
+      />
+
+      {/* Preview area - always visible */}
+      <div className="flex-1 relative">
+        <LivePreview
+          sourceId={selectedSourceId}
+          isRecording={isRecording}
+          webcamEnabled={webcamEnabled}
+          webcamDeviceId={selectedWebcamDevice}
+          webcamPosition={settings.webcamPosition}
+          webcamSize={settings.webcamSize}
+          webcamShape={settings.webcamShape}
+        />
+      </div>
+
+      {/* Right panel for source/settings - hidden during recording */}
+      {!isRecording && (
+        <RightPanel mode={panelMode} onClose={() => setPanelMode(null)}>
+          {panelMode === 'source' && (
+            <SourceSelector
+              onSourceSelect={handleSourceSelect}
+              selectedSourceId={selectedSourceId}
+            />
+          )}
+          {panelMode === 'settings' && (
+            <Settings
+              settings={settings}
+              onUpdateSettings={handleUpdateSettings}
+            />
+          )}
+        </RightPanel>
+      )}
     </div>
   );
 };

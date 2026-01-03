@@ -1,4 +1,6 @@
 import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDesktop, faPen, faGear, faPlay, faStop, faPause } from '@fortawesome/free-solid-svg-icons';
 import { formatDuration } from '../hooks/useRecordingState';
 import DeviceDropdown from './DeviceDropdown';
 
@@ -21,6 +23,7 @@ interface ToolbarProps {
   onMicDeviceSelect: (deviceId: string) => void;
   onStartRecording: () => void;
   onStopRecording: () => void;
+  onPauseResume: () => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -42,76 +45,98 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onMicDeviceSelect,
   onStartRecording,
   onStopRecording,
+  onPauseResume,
 }) => {
   return (
-    <div className="bg-dark-panel border-b border-dark-border px-3 sm:px-6 py-3">
-      <div className="flex items-center justify-between gap-2 sm:gap-4">
-        {/* Timer - responsive sizing */}
-        <div className="text-lg sm:text-2xl font-mono font-bold text-dark-text min-w-[70px] sm:min-w-[100px] shrink-0">
-          {formatDuration(duration)}
+    <div className="bg-dark-panel border-b border-dark-border px-4 py-3">
+      <div className="flex items-center justify-between gap-4">
+        {/* Timer with recording indicator */}
+        <div className="flex items-center gap-2 min-w-[120px] shrink-0">
+          {isRecording && (
+            <div className={`recording-indicator ${isPaused ? 'paused' : ''}`} />
+          )}
+          <div className="text-2xl font-mono font-bold text-dark-text">
+            {formatDuration(duration)}
+          </div>
         </div>
 
-        {/* Center Controls - can wrap and grow to fill space */}
-        <div className="flex items-center gap-2 flex-wrap justify-center flex-1">
+        {/* Center Controls */}
+        <div className="flex items-center gap-3 justify-center flex-1">
+          {/* Source button */}
           <button
             onClick={onSourceClick}
             disabled={isRecording}
-            className={'toolbar-button text-sm whitespace-nowrap ' + (selectedSourceId ? 'active' : '')}
+            className={`toolbar-button-with-text ${selectedSourceId ? 'active' : ''}`}
+            title="Select source"
           >
+            <FontAwesomeIcon icon={faDesktop} className="w-4 h-4" />
             <span>Source</span>
           </button>
 
+          {/* Annotate button - icon only */}
           <button
             onClick={() => onAnnotateToggle(!annotateEnabled)}
-            className={'toolbar-button text-sm whitespace-nowrap ' + (annotateEnabled ? 'active' : '')}
+            className={`toolbar-button-icon ${annotateEnabled ? 'active' : ''}`}
+            title="Toggle annotations"
           >
-            <span>Annotate</span>
+            <FontAwesomeIcon icon={faPen} className="w-4 h-4" />
           </button>
 
+          {/* Webcam dropdown */}
           <DeviceDropdown
             type="video"
             enabled={webcamEnabled}
             selectedDeviceId={selectedWebcamDevice}
             onToggle={onWebcamToggle}
             onDeviceSelect={onWebcamDeviceSelect}
-            icon=""
-            label="Webcam"
           />
 
+          {/* Mic dropdown */}
           <DeviceDropdown
             type="audio"
             enabled={micEnabled}
             selectedDeviceId={selectedMicDevice}
             onToggle={onMicToggle}
             onDeviceSelect={onMicDeviceSelect}
-            icon=""
-            label="Mic"
           />
 
+          {/* Settings button - icon only */}
           <button
             onClick={onSettingsClick}
-            className="toolbar-button text-sm whitespace-nowrap"
+            className="toolbar-button-icon"
             disabled={isRecording}
+            title="Settings"
           >
-            <span>Settings</span>
+            <FontAwesomeIcon icon={faGear} className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Start/Stop Button - responsive text and padding */}
-        <button
-          onClick={isRecording ? onStopRecording : onStartRecording}
-          disabled={!isRecording && !selectedSourceId}
-          className={'px-3 sm:px-6 py-2 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 whitespace-nowrap shrink-0 ' + (isRecording ? 'bg-danger hover:bg-danger-dark text-white' : 'bg-primary hover:bg-primary-dark text-white disabled:opacity-50 disabled:cursor-not-allowed')}
-        >
-          {isRecording ? (
-            <span>Stop</span>
-          ) : (
-            <>
-              <span className="hidden lg:inline">Start Recording</span>
-              <span className="lg:hidden">Start</span>
-            </>
+        {/* Recording controls */}
+        <div className="flex items-center gap-2 shrink-0">
+          {isRecording && (
+            <button
+              onClick={onPauseResume}
+              className="toolbar-button-with-text"
+              title={isPaused ? 'Resume' : 'Pause'}
+            >
+              <FontAwesomeIcon icon={isPaused ? faPlay : faPause} className="w-4 h-4" />
+              <span>{isPaused ? 'Resume' : 'Pause'}</span>
+            </button>
           )}
-        </button>
+
+          <button
+            onClick={isRecording ? onStopRecording : onStartRecording}
+            disabled={!isRecording && !selectedSourceId}
+            className={`px-5 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${
+              isRecording
+                ? 'bg-danger hover:bg-danger-dark text-white'
+                : 'bg-primary hover:bg-primary-dark text-white disabled:opacity-50 disabled:cursor-not-allowed'
+            }`}
+          >
+            <FontAwesomeIcon icon={isRecording ? faStop : faPlay} className="w-4 h-4" />
+            <span>{isRecording ? 'Stop' : 'Start'}</span>
+          </button>
+        </div>
       </div>
     </div>
   );

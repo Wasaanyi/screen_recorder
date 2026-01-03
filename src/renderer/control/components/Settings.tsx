@@ -82,15 +82,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, onUpdateSettings }) => {
             />
             <span className="text-sm text-dark-text">Include System Audio</span>
           </label>
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.includeMicrophone}
-              onChange={(e) => onUpdateSettings({ includeMicrophone: e.target.checked })}
-              className="w-4 h-4 text-primary focus:ring-primary border-dark-border rounded"
-            />
-            <span className="text-sm text-dark-text">Include Microphone</span>
-          </label>
+          <p className="text-xs text-dark-text-muted mt-1">
+            Use the Mic button in the toolbar to enable microphone
+          </p>
         </div>
       </div>
     </div>

@@ -14,8 +14,8 @@ const Timeline: React.FC<TimelineProps> = ({
   currentTime,
   startTime,
   endTime,
-  onStartTimeChange,
-  onEndTimeChange
+  onStartTimeChange: _onStartTimeChange,
+  onEndTimeChange: _onEndTimeChange
 }) => {
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);

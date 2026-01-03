@@ -15,7 +15,7 @@ interface Point {
 const Canvas: React.FC<CanvasProps> = ({ tool, color, thickness, onClear }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [startPoint, setStartPoint] = useState<Point | null>(null);
+  const [_startPoint, setStartPoint] = useState<Point | null>(null);
   const [paths, setPaths] = useState<any[]>([]);
 
   useEffect(() => {
@@ -29,7 +29,8 @@ const Canvas: React.FC<CanvasProps> = ({ tool, color, thickness, onClear }) => {
   }, [paths]);
 
   useEffect(() => {
-    if (onClear) {
+    // Clear paths when onClear reference changes
+    {
       setPaths([]);
     }
   }, [onClear]);

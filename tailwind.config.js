@@ -21,6 +21,11 @@ export default {
           dark: '#059669',
           light: '#34d399',
         },
+        warning: {
+          DEFAULT: '#f59e0b',
+          dark: '#d97706',
+          light: '#fbbf24',
+        },
         dark: {
           bg: '#1a1a1a',
           panel: '#2d2d2d',
