@@ -4,7 +4,7 @@
   "description": "Professional screen recorder with webcam overlay and editing",
   "main": "dist-electron/main/index.js",
   "type": "module",
-  "author": "Your Name",
+  "author": "James Wasaanyi",
   "license": "MIT",
   "private": true,
   "scripts": {
