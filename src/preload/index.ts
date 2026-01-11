@@ -17,8 +17,8 @@ const api = {
     ipcRenderer.invoke(IPC_CHANNELS.GET_SCREEN_SOURCES),
 
   // Recording controls
-  startRecording: (sourceId: string, settings: RecordingSettings, displayId?: string): Promise<void> =>
-    ipcRenderer.invoke(IPC_CHANNELS.START_RECORDING, sourceId, settings, displayId),
+  startRecording: (sourceId: string, settings: RecordingSettings): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.START_RECORDING, sourceId, settings),
 
   stopRecording: (): Promise<string> =>
     ipcRenderer.invoke(IPC_CHANNELS.STOP_RECORDING),

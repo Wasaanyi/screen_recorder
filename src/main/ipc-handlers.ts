@@ -44,10 +44,10 @@ export function setupIPCHandlers(): void {
   });
 
   // Recording controls
-  ipcMain.handle(IPC_CHANNELS.START_RECORDING, async (_event, sourceId: string, settings: RecordingSettings, displayId?: string) => {
+  ipcMain.handle(IPC_CHANNELS.START_RECORDING, async (_event, sourceId: string, settings: RecordingSettings) => {
     try {
       currentSettings = { ...currentSettings, ...settings };
-      await startRecording(sourceId, currentSettings, displayId);
+      await startRecording(sourceId, currentSettings);
     } catch (error) {
       console.error('Error starting recording:', error);
       throw error;

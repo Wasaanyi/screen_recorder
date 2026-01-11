@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ANNOTATION_COLORS, ANNOTATION_THICKNESS } from '../../../shared/constants';
 
 interface ToolbarProps {
@@ -12,6 +12,8 @@ interface ToolbarProps {
   onClose: () => void;
 }
 
+const STORAGE_KEY = 'annotation-toolbar-position';
+
 const Toolbar: React.FC<ToolbarProps> = ({
   tool,
   color,
@@ -22,6 +24,21 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onClear,
   onClose
 }) => {
+  const [position, setPosition] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // Ignore errors
+    }
+    return { x: window.innerWidth / 2 - 300, y: 20 };
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const toolbarRef = useRef<HTMLDivElement>(null);
+
   const tools: Array<{ id: 'pen' | 'highlighter' | 'arrow' | 'rectangle' | 'circle' | 'text'; label: string }> = [
     { id: 'pen', label: '✏️' },
     { id: 'highlighter', label: '🖍️' },
@@ -31,25 +48,96 @@ const Toolbar: React.FC<ToolbarProps> = ({
     { id: 'text', label: 'T' }
   ];
 
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (toolbarRef.current) {
+      const rect = toolbarRef.current.getBoundingClientRect();
+      dragOffset.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+      setIsDragging(true);
+    }
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDragging) {
+      const newX = e.clientX - dragOffset.current.x;
+      const newY = e.clientY - dragOffset.current.y;
+
+      // Keep toolbar within screen bounds
+      const maxX = window.innerWidth - (toolbarRef.current?.offsetWidth || 600);
+      const maxY = window.innerHeight - (toolbarRef.current?.offsetHeight || 80);
+
+      const clampedX = Math.max(0, Math.min(newX, maxX));
+      const clampedY = Math.max(0, Math.min(newY, maxY));
+
+      setPosition({ x: clampedX, y: clampedY });
+    }
+  }, [isDragging]);
+
+  const handleMouseUp = useCallback(() => {
+    if (isDragging) {
+      setIsDragging(false);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(position));
+      } catch {
+        // Ignore storage errors
+      }
+    }
+  }, [isDragging, position]);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
   return (
     <div
+      ref={toolbarRef}
       style={{
         position: 'fixed',
-        top: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
+        left: `${position.x}px`,
+        top: `${position.y}px`,
         background: 'rgba(255, 255, 255, 0.95)',
         borderRadius: '12px',
-        padding: '16px',
+        padding: '8px 16px 16px 16px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         display: 'flex',
-        gap: '16px',
-        alignItems: 'center',
-        zIndex: 10000
+        flexDirection: 'column',
+        gap: '8px',
+        zIndex: 10000,
+        userSelect: 'none'
       }}
     >
-      {/* Tools */}
-      <div style={{ display: 'flex', gap: '8px' }}>
+      {/* Drag Handle */}
+      <div
+        onMouseDown={handleMouseDown}
+        style={{
+          cursor: isDragging ? 'grabbing' : 'grab',
+          padding: '4px 0',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
+      >
+        <div style={{
+          width: '40px',
+          height: '4px',
+          background: '#d1d5db',
+          borderRadius: '2px'
+        }} />
+      </div>
+
+      {/* Tools Row */}
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        {/* Tools */}
+        <div style={{ display: 'flex', gap: '8px' }}>
         {tools.map((t) => (
           <button
             key={t.id}
@@ -161,6 +249,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         >
           Close
         </button>
+      </div>
       </div>
     </div>
   );

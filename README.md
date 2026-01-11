@@ -1,61 +1,108 @@
 # Screen Recorder
 
-A professional Electron-based screen recording application for Windows with webcam overlay, annotation tools, and video editing capabilities.
+[![Latest Release](https://img.shields.io/github/v/release/Wasaanyi/screen_recorder?style=flat-square)](https://github.com/Wasaanyi/screen_recorder/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey?style=flat-square)](https://github.com/Wasaanyi/screen_recorder/releases)
+
+A professional Electron-based screen recording application for Windows with webcam overlay, real-time annotations, and video editing capabilities.
+
+## Download
+
+**[Download Latest Release](https://github.com/Wasaanyi/screen_recorder/releases/latest)**
+
+1. Download `Screen.Recorder.Setup.x.x.x.exe` from the latest release
+2. Run the installer
+3. If Windows SmartScreen appears, click "More info" → "Run anyway"
+4. Follow the installation wizard
 
 ## Features
 
-- **Screen & Window Recording**: Capture your entire screen or individual windows
-- **Webcam Overlay**: Add a webcam feed to your recordings with customizable shape (circle/square)
-- **Annotation Tools**: Draw, highlight, and annotate while recording
-- **Video Editor**: Trim and edit your recordings
-- **Multiple Quality Presets**: Low, Medium, High, and Ultra quality settings
-- **Audio Recording**: System audio and/or microphone
-- **System Tray Integration**: Quick access to recording controls
+### Core Recording
+- **Screen & Window Capture** - Record entire screen or individual application windows
+- **Source Selection** - Visual picker with thumbnails for screens and windows
+- **Pause/Resume** - Pause recording without stopping, continue when ready
+- **Real-time Preview** - Live preview of selected source before and during recording
+
+### Video Quality
+| Preset | Resolution | Frame Rate | Bitrate |
+|--------|------------|------------|---------|
+| Low | 720p | 15 fps | 1000 kbps |
+| Medium | 1080p | 30 fps | 2500 kbps |
+| High | 1080p | 60 fps | 5000 kbps |
+| Ultra | 1440p | 60 fps | 8000 kbps |
+
+### Audio
+- **System Audio** - Capture desktop/application sounds
+- **Microphone** - Record voice with device selection
+- **Audio Mixing** - Combine system audio and microphone in real-time
+
+### Webcam Overlay
+- **Live Webcam Feed** - Overlay your webcam during recording
+- **Shape Options** - Circle or square webcam frame
+- **Position Control** - Place in any corner (top-left, top-right, bottom-left, bottom-right)
+- **Size Adjustment** - Configurable overlay size
+- **Multiple Cameras** - Select from available webcam devices
+
+### Annotation Tools
+Draw and annotate on screen while recording:
+- **Pen** - Freehand drawing
+- **Highlighter** - Semi-transparent highlighting
+- **Arrow** - Direction indicators
+- **Rectangle** - Box annotations
+- **Circle** - Circular shapes
+- **Text** - Add text labels
+- **9 Colors** - Red, orange, yellow, green, blue, purple, pink, black, white
+- **5 Thickness Levels** - 2px to 12px stroke width
+
+### Video Editor
+- **Timeline Scrubber** - Navigate through your recording
+- **Trim Tool** - Cut start and end points
+- **Export** - Save edited videos to custom location
+
+### Additional Features
+- **System Tray** - Quick access menu for recording controls
+- **Settings Persistence** - Remember your preferences
+- **MP4 Output** - Universal format via FFmpeg conversion
+- **Dark Theme UI** - Modern, eye-friendly interface
 
 ## Tech Stack
 
-- Electron 28+
-- React 18 with TypeScript
-- Vite for fast development and building
-- Tailwind CSS for styling
-- FFmpeg for video processing
+- **Framework**: Electron 28
+- **UI**: React 18 + TypeScript
+- **Build**: Vite 5
+- **Styling**: Tailwind CSS
+- **Video Processing**: FFmpeg (bundled)
 
-## Getting Started
+## Getting Started (Development)
 
 ### Prerequisites
 
-- Node.js 18+ installed
-- npm or yarn package manager
+- Node.js 18+
+- npm or yarn
 
 ### Installation
 
-1. Install dependencies:
 ```bash
-npm install
-```
+# Clone the repository
+git clone https://github.com/Wasaanyi/screen_recorder.git
+cd screen_recorder
 
-2. Start the development server:
-```bash
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
 ```
 
-The application will launch with hot-reload enabled for development.
-
-### Building for Production
-
-To build the application:
+### Build Commands
 
 ```bash
-npm run build:app
+npm run dev          # Start development with hot-reload
+npm run build:app    # Build without packaging
+npm run build        # Full build + Windows installer
+npm run package      # Package for Windows (after build:app)
+npm run typecheck    # TypeScript type checking
 ```
-
-To create a Windows installer:
-
-```bash
-npm run package
-```
-
-The installer will be created in the `release` folder.
 
 ## Project Structure
 
@@ -70,25 +117,17 @@ screen-recorder/
 │   │   ├── tray.ts        # System tray
 │   │   └── ipc-handlers.ts # IPC communication
 │   │
-│   ├── renderer/          # Renderer processes (React apps)
+│   ├── renderer/          # Renderer processes (React)
 │   │   ├── control/       # Main control panel
 │   │   ├── overlay/       # Annotation overlay
 │   │   ├── webcam/        # Webcam window
 │   │   └── editor/        # Video editor
 │   │
 │   ├── preload/           # Preload scripts
-│   │   └── index.ts       # Context bridge API
-│   │
-│   └── shared/            # Shared code
-│       ├── types.ts       # TypeScript types
-│       ├── constants.ts   # Constants
-│       └── ipc-channels.ts # IPC channel definitions
+│   └── shared/            # Shared types & constants
 │
-├── assets/                # Static assets
-│   └── icons/            # Application icons
-│
-└── resources/            # Build resources
-
+├── release/               # Build output
+└── assets/                # Static assets
 ```
 
 ## Usage
@@ -97,86 +136,50 @@ screen-recorder/
 
 1. Launch the application
 2. Select a screen or window from the source picker
-3. Configure settings (optional):
-   - Video quality
-   - Frame rate
-   - Audio sources
-4. Enable webcam or annotations (optional)
-5. Click "Start Recording"
-6. Click "Stop Recording" when done
+3. Configure settings (quality, audio, webcam)
+4. Click **Start Recording** (or press the record button)
+5. Click **Stop Recording** when finished
+6. Recording is automatically saved to your output folder
 
 ### Using Annotations
 
-1. Enable "Annotations" before or during recording
-2. An overlay window will appear with drawing tools
-3. Select tool, color, and thickness
-4. Draw on the screen
-5. Use "Clear" to remove all annotations
-6. Click "Close" when done
+1. Click the **Pen icon** to enable annotations
+2. Select your tool, color, and thickness
+3. Draw directly on screen while recording
+4. Click **Clear** to remove all annotations
+5. Close the overlay when done
 
 ### Using Webcam Overlay
 
-1. Enable "Webcam" before or during recording
-2. A webcam window will appear
-3. Drag to reposition
-4. Resize as needed
-5. Toggle between circle and square shape
+1. Click the **Camera icon** to enable webcam
+2. Select your camera device if multiple are available
+3. Choose shape (circle/square) and position
+4. Webcam appears as overlay in your recording
 
 ### Editing Videos
 
-1. After stopping a recording, click "Open in Editor"
+1. After recording, click **Open in Editor**
 2. Use the timeline to set trim points
-3. Click "Apply Trim" to trim the video
-4. Click "Export Video" to save
+3. Click **Apply Trim** to cut the video
+4. Click **Export** to save
 
-## Configuration
+## Roadmap
 
-### Output Settings
+Future enhancements planned:
 
-- **Output Folder**: Where recordings are saved
-- **Video Quality**:
-  - Low: 720p @ 15fps
-  - Medium: 1080p @ 30fps
-  - High: 1080p @ 60fps
-  - Ultra: 1440p @ 60fps
-- **Audio**: System audio and/or microphone
-
-### Keyboard Shortcuts
-
-(To be implemented - you can add custom shortcuts using Electron's globalShortcut API)
-
-## Development
-
-### Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build:app` - Build the application
-- `npm run package` - Create Windows installer
-- `npm run typecheck` - Run TypeScript type checking
-
-### Adding New Features
-
-1. **Main Process**: Add logic to `src/main/`
-2. **IPC Communication**: Define channels in `src/shared/ipc-channels.ts`
-3. **Renderer**: Add UI components in `src/renderer/`
-4. **Preload**: Expose APIs in `src/preload/index.ts`
-
-## Known Issues
-
-- Recording functionality uses simulated recording (implement actual MediaRecorder integration)
-- FFmpeg processing is basic (can be enhanced with more options)
-- Annotation overlay needs click-through implementation for better UX
-
-## Future Enhancements
-
-- [ ] Actual screen recording implementation with MediaRecorder API
-- [ ] Real-time preview during recording
 - [ ] Custom keyboard shortcuts
-- [ ] Cloud upload integration
-- [ ] Video compression options
+- [ ] Cloud upload integration (Google Drive, Dropbox)
+- [ ] GIF export option
 - [ ] Watermark support
-- [ ] GIF export
-- [ ] License key system for one-time purchase model
+- [ ] Additional video compression options
+- [ ] macOS and Linux support
+- [ ] Auto-update mechanism
+
+## Known Limitations
+
+- Windows only (x64)
+- No code signing (SmartScreen warning on install)
+- System audio capture requires Windows 10+
 
 ## License
 
@@ -185,3 +188,9 @@ MIT
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request

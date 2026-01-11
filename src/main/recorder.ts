@@ -1,4 +1,4 @@
-import { getControlWindow, showRecordingBorder, closeRecordingBorder } from './windows';
+import { getControlWindow } from './windows';
 import { IPC_CHANNELS } from '../shared/ipc-channels';
 import type { RecordingSettings, RecordingState } from '../shared/types';
 import { processVideoWithFFmpeg } from './ffmpeg';
@@ -16,8 +16,6 @@ let recordingInterval: NodeJS.Timeout | null = null;
 let currentSettings: RecordingSettings | null = null;
 let fileStream: WriteStream | null = null;
 let recordedChunks: Buffer[] = [];
-let currentSourceId: string | null = null;
-let currentDisplayId: string | null = null;
 
 function notifyStateChanged() {
   const controlWindow = getControlWindow();
@@ -43,14 +41,10 @@ function notifyError(error: string) {
   }
 }
 
-export async function startRecording(sourceId: string, settings: RecordingSettings, displayId?: string): Promise<void> {
+export async function startRecording(sourceId: string, settings: RecordingSettings): Promise<void> {
   if (recordingState.isRecording) {
     throw new Error('Recording already in progress');
   }
-
-  // Store source info for border display
-  currentSourceId = sourceId;
-  currentDisplayId = displayId || null;
 
   try {
     // Ensure output directory exists
@@ -93,9 +87,6 @@ export async function startRecording(sourceId: string, settings: RecordingSettin
       });
     }
 
-    // Show red border around the recording source
-    showRecordingBorder(sourceId, currentDisplayId || undefined);
-
     notifyStateChanged();
 
     console.log('Recording started:', { sourceId, tempOutputFile, finalOutputFile });
@@ -112,9 +103,6 @@ export async function stopRecording(): Promise<string> {
   }
 
   try {
-    // Close the recording border
-    closeRecordingBorder();
-
     // Tell the renderer to stop MediaRecorder
     const controlWindow = getControlWindow();
     if (controlWindow && !controlWindow.isDestroyed()) {
