@@ -65,6 +65,7 @@ export default defineConfig({
       '@preload': resolve(__dirname, 'src/preload')
     }
   },
+  publicDir: 'public',
   server: {
     port: 5173,
     strictPort: true

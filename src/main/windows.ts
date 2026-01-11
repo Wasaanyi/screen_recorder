@@ -24,6 +24,7 @@ export function createControlWindow(): BrowserWindow {
     height: WINDOW_SIZES.CONTROL.height,
     minWidth: WINDOW_SIZES.CONTROL.minWidth,
     minHeight: WINDOW_SIZES.CONTROL.minHeight,
+    icon: join(__dirname, '../../assets/icons/icon-256.png'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -136,6 +137,7 @@ export function createEditorWindow(videoPath: string): BrowserWindow {
     height: WINDOW_SIZES.EDITOR.height,
     minWidth: WINDOW_SIZES.EDITOR.minWidth,
     minHeight: WINDOW_SIZES.EDITOR.minHeight,
+    icon: join(__dirname, '../../assets/icons/icon-256.png'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
