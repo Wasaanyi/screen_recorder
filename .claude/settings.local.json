@@ -7,7 +7,13 @@
       "Bash(npm run typecheck:*)",
       "Bash(npm run build:*)",
       "Bash(node -e:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:app:*)",
+      "Bash(npx electron-builder:*)",
+      "Bash(node scripts/generate-icons.js:*)"
     ]
   }
 }

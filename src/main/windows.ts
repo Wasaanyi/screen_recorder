@@ -56,7 +56,7 @@ export function createOverlayWindow(): BrowserWindow {
 
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 
-  overlayWindow = new BrowserWindow({
+  const overlayOptions: Electron.BrowserWindowConstructorOptions = {
     width,
     height,
     x: 0,
@@ -71,7 +71,14 @@ export function createOverlayWindow(): BrowserWindow {
       contextIsolation: true,
       nodeIntegration: false
     }
-  });
+  };
+
+  // On Linux, enable compositor hints for transparent windows
+  if (process.platform === 'linux') {
+    overlayOptions.type = 'toolbar';
+  }
+
+  overlayWindow = new BrowserWindow(overlayOptions);
 
   overlayWindow.setIgnoreMouseEvents(false);
   overlayWindow.setAlwaysOnTop(true, 'screen-saver');

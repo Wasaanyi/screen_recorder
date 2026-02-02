@@ -2,18 +2,38 @@
 
 [![Latest Release](https://img.shields.io/github/v/release/Wasaanyi/screen_recorder?style=flat-square)](https://github.com/Wasaanyi/screen_recorder/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey?style=flat-square)](https://github.com/Wasaanyi/screen_recorder/releases)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat-square)](https://github.com/Wasaanyi/screen_recorder/releases)
 
-A professional Electron-based screen recording application for Windows with webcam overlay, real-time annotations, and video editing capabilities.
+A professional Electron-based screen recording application with webcam overlay, real-time annotations, and video editing capabilities. Available for Windows, macOS, and Linux.
 
 ## Download
 
 **[Download Latest Release](https://github.com/Wasaanyi/screen_recorder/releases/latest)**
 
+### Windows
+
 1. Download `Screen.Recorder.Setup.x.x.x.exe` from the latest release
 2. Run the installer
 3. If Windows SmartScreen appears, click "More info" → "Run anyway"
 4. Follow the installation wizard
+
+### macOS
+
+1. Download the `.dmg` file (Intel or Apple Silicon)
+2. Open the `.dmg` and drag Screen Recorder to Applications
+3. On first launch, right-click the app and select "Open"
+4. Grant Screen Recording and Camera permissions when prompted (System Settings > Privacy & Security)
+
+### Linux
+
+**AppImage:**
+1. Download the `.AppImage` file
+2. Make it executable: `chmod +x Screen-Recorder-*.AppImage`
+3. Run it: `./Screen-Recorder-*.AppImage`
+
+**Debian/Ubuntu (.deb):**
+1. Download the `.deb` file
+2. Install: `sudo dpkg -i screen-recorder_*.deb`
 
 ## Features
 
@@ -64,6 +84,7 @@ Draw and annotate on screen while recording:
 - **Settings Persistence** - Remember your preferences
 - **MP4 Output** - Universal format via FFmpeg conversion
 - **Dark Theme UI** - Modern, eye-friendly interface
+- **Cross-Platform** - Windows, macOS (Intel + Apple Silicon), and Linux
 
 ## Tech Stack
 
@@ -72,6 +93,7 @@ Draw and annotate on screen while recording:
 - **Build**: Vite 5
 - **Styling**: Tailwind CSS
 - **Video Processing**: FFmpeg (bundled)
+- **Packaging**: electron-builder (NSIS, DMG, AppImage, deb)
 
 ## Getting Started (Development)
 
@@ -97,11 +119,14 @@ npm run dev
 ### Build Commands
 
 ```bash
-npm run dev          # Start development with hot-reload
-npm run build:app    # Build without packaging
-npm run build        # Full build + Windows installer
-npm run package      # Package for Windows (after build:app)
-npm run typecheck    # TypeScript type checking
+npm run dev            # Start development with hot-reload
+npm run build:app      # Build without packaging
+npm run build          # Full build + Windows installer
+npm run package        # Package for Windows (after build:app)
+npm run package:mac    # Package for macOS (Intel + Apple Silicon)
+npm run package:linux  # Package for Linux (AppImage + deb)
+npm run typecheck      # TypeScript type checking
+npm run generate-icons # Regenerate app icons from SVG
 ```
 
 ## Project Structure
@@ -126,8 +151,10 @@ screen-recorder/
 │   ├── preload/           # Preload scripts
 │   └── shared/            # Shared types & constants
 │
+├── build/                 # Build resources (entitlements)
+├── scripts/               # Build & icon generation scripts
 ├── release/               # Build output
-└── assets/                # Static assets
+└── assets/                # Static assets & icons
 ```
 
 ## Usage
@@ -163,6 +190,22 @@ screen-recorder/
 3. Click **Apply Trim** to cut the video
 4. Click **Export** to save
 
+## Platform Notes
+
+### macOS
+- Requires granting Screen Recording permission (System Settings > Privacy & Security > Screen Recording)
+- Camera and Microphone permissions are requested on first use
+- Supports both Intel (x64) and Apple Silicon (arm64) Macs
+
+### Linux
+- AppImage requires FUSE (installed by default on most distributions)
+- Screen capture uses PipeWire/XDG portal on Wayland, X11 capture on X.org
+- Some window managers may require a compositor for transparent overlay windows
+
+### Windows
+- System audio capture requires Windows 10+
+- App is unsigned (SmartScreen warning on install)
+
 ## Roadmap
 
 Future enhancements planned:
@@ -172,14 +215,8 @@ Future enhancements planned:
 - [ ] GIF export option
 - [ ] Watermark support
 - [ ] Additional video compression options
-- [ ] macOS and Linux support
 - [ ] Auto-update mechanism
-
-## Known Limitations
-
-- Windows only (x64)
-- No code signing (SmartScreen warning on install)
-- System audio capture requires Windows 10+
+- [x] macOS and Linux support
 
 ## License
 

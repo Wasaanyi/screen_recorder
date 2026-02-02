@@ -10,7 +10,13 @@ let tray: Tray | null = null;
 
 export function createTray(): Tray {
   const iconPath = join(__dirname, '../../assets/icons/icon-16.png');
-  const icon = nativeImage.createFromPath(iconPath);
+  let icon = nativeImage.createFromPath(iconPath);
+
+  // On macOS, resize to 16x16 and mark as template for proper menu bar rendering
+  if (process.platform === 'darwin') {
+    icon = icon.resize({ width: 16, height: 16 });
+    icon.setTemplateImage(true);
+  }
 
   tray = new Tray(icon);
 

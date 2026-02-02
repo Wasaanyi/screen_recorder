@@ -10,6 +10,7 @@ This guide explains how to build, package, and distribute the Screen Recorder ap
 - [Publishing to GitHub Releases](#publishing-to-github-releases)
 - [User Installation Guide](#user-installation-guide)
 - [Troubleshooting](#troubleshooting)
+- [Cross-Platform Deployment (v1.1.0+)](#cross-platform-deployment-v110)
 
 ---
 
@@ -110,6 +111,12 @@ Edit `package.json` and update the version:
   "version": "1.1.0",  // <-- Update this
   ...
 }
+```
+
+Also update `src/shared/constants.ts`:
+
+```ts
+export const APP_VERSION = '1.1.0';  // <-- Keep in sync
 ```
 
 Follow [Semantic Versioning](https://semver.org/):
@@ -216,9 +223,9 @@ git push origin v1.1.0
    - Check **"Set as the latest release"**
    - Click **"Publish release"**
 
-### Automated Releases (Optional)
+### Automated Releases (via GitHub Actions)
 
-See the GitHub Actions workflow in `.github/workflows/release.yml` for automated builds on version tags.
+The CI/CD pipeline in `.github/workflows/release.yml` automatically builds for all platforms when you push a version tag. See the [Cross-Platform Deployment](#cross-platform-deployment-v110) section below.
 
 ---
 
@@ -229,7 +236,7 @@ Share these instructions with users:
 ### Downloading
 
 1. Go to the [Releases page](https://github.com/Wasaanyi/screen_recorder/releases)
-2. Download `Screen.Recorder.Setup.x.x.x.exe` from the latest release
+2. Download the installer for your platform from the latest release
 
 ### Installing
 
@@ -384,19 +391,168 @@ To enable automatic updates:
 
 3. Add update check code to main process
 
-### Multi-Platform Builds
+---
 
-To build for macOS and Linux, update `package.json`:
+## Cross-Platform Deployment (v1.1.0+)
 
-```json
-"mac": {
-  "target": "dmg",
-  "category": "public.app-category.video"
-},
-"linux": {
-  "target": ["AppImage", "deb"],
-  "category": "Video"
-}
+This section covers the steps to push the v1.1.0 release with macOS and Linux support. Since you've already pushed v1.0.0, follow these steps for the update.
+
+### What Changed in v1.1.0
+
+- macOS packaging (DMG + ZIP for Intel x64 and Apple Silicon arm64)
+- Linux packaging (AppImage + .deb for x64)
+- Platform-specific output paths (macOS uses `~/Movies`)
+- macOS entitlements for screen recording and camera access
+- macOS tray icon template image support
+- Linux transparent window compositor hints
+- Multi-platform CI/CD pipeline (builds on Windows, macOS, and Linux runners)
+- Updated icons (added 1024px for macOS Retina)
+
+### Step 1: Verify Everything Builds Locally
+
+```bash
+# Clean old build artifacts
+rm -rf dist dist-electron release
+
+# Build the app
+npm run build:app
+
+# Test Windows packaging still works
+npm run package
 ```
 
-Note: macOS builds require Apple Developer account for notarization.
+Verify the Windows installer at `release/1.1.0/` launches and works correctly.
+
+### Step 2: Commit All Changes
+
+```bash
+# Check what's changed
+git status
+
+# Stage all the modified and new files
+git add package.json
+git add src/shared/constants.ts
+git add src/main/index.ts
+git add src/main/windows.ts
+git add src/main/tray.ts
+git add src/main/ipc-handlers.ts
+git add scripts/generate-icons.js
+git add scripts/afterPack.js
+git add build/entitlements.mac.plist
+git add assets/icons/icon-1024.png
+git add assets/icons/icon.png
+git add .github/workflows/release.yml
+git add README.md
+git add CLAUDE.md
+git add DEPLOYMENT.md
+
+# Commit
+git commit -m "feat: add macOS and Linux packaging support
+
+- Add mac (DMG/ZIP) and linux (AppImage/deb) build targets
+- Add macOS entitlements for screen recording, camera, microphone
+- Add afterPack script to set FFmpeg binary permissions on unix
+- Fix default output path for macOS (~/Movies/Screen Recordings)
+- Fix tray icon for macOS template image rendering
+- Fix overlay window transparency on Linux
+- Update CI/CD to build on all 3 platforms in parallel
+- Update icons with 1024px for macOS Retina
+- Bump version to 1.1.0"
+```
+
+### Step 3: Push to GitHub
+
+```bash
+git push origin master
+```
+
+### Step 4: Tag and Trigger CI Build
+
+```bash
+# Create the version tag
+git tag -a v1.1.0 -m "Release v1.1.0 - macOS and Linux support"
+
+# Push the tag (this triggers the GitHub Actions workflow)
+git push origin v1.1.0
+```
+
+Once the tag is pushed, GitHub Actions will automatically:
+1. Build Windows installer on `windows-latest`
+2. Build macOS DMG/ZIP on `macos-latest`
+3. Build Linux AppImage/deb on `ubuntu-latest`
+4. Create a GitHub Release with all platform installers attached
+
+### Step 5: Monitor the CI Build
+
+1. Go to your repository on GitHub
+2. Click **Actions** tab
+3. Watch the "Build and Release" workflow
+4. All 3 platform builds should complete (expect ~10-15 minutes)
+
+If a platform build fails:
+- Click into the failed job to see logs
+- Common issues:
+  - **macOS**: Icon conversion failures (ensure `icon-512.png` exists)
+  - **Linux**: Missing system dependencies (the Ubuntu runner should have everything)
+  - **Windows**: NSIS errors (usually self-resolving on retry)
+
+### Step 6: Verify the Release
+
+1. Go to **Releases** on your GitHub repository
+2. Confirm `v1.1.0` release was created with all these artifacts:
+   - `Screen.Recorder.Setup.1.1.0.exe` (Windows)
+   - `Screen-Recorder-1.1.0.dmg` (macOS)
+   - `Screen-Recorder-1.1.0-mac.zip` (macOS)
+   - `Screen-Recorder-1.1.0.AppImage` (Linux)
+   - `screen-recorder_1.1.0_amd64.deb` (Linux)
+3. Download and test on each platform if possible
+
+### macOS Code Signing (Optional but Recommended)
+
+Without code signing, macOS users will see a Gatekeeper warning. To sign:
+
+1. **Get an Apple Developer account** ($99/year at [developer.apple.com](https://developer.apple.com))
+
+2. **Create a Developer ID Application certificate** in Xcode or the Apple Developer portal
+
+3. **Add secrets to GitHub repository** (Settings > Secrets and variables > Actions):
+   ```
+   CSC_LINK          = base64-encoded .p12 certificate
+   CSC_KEY_PASSWORD   = certificate password
+   APPLE_ID           = your@apple.id
+   APPLE_APP_SPECIFIC_PASSWORD = app-specific password from appleid.apple.com
+   APPLE_TEAM_ID      = your team ID
+   ```
+
+4. **Update the macOS CI step** in `.github/workflows/release.yml`:
+   ```yaml
+   - name: Build and package
+     run: npm run build:app && npm run package:mac
+     env:
+       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       CSC_LINK: ${{ secrets.CSC_LINK }}
+       CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+       APPLE_ID: ${{ secrets.APPLE_ID }}
+       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+   ```
+
+   electron-builder will automatically sign and notarize when these env vars are present.
+
+### Platform-Specific Troubleshooting
+
+**macOS: "Screen Recorder is damaged and can't be opened"**
+- This happens with unsigned apps. Users need to: `xattr -cr /Applications/Screen\ Recorder.app`
+- Or right-click > Open > Open (bypasses Gatekeeper once)
+
+**macOS: Screen recording permission not working**
+- The app must be added to System Settings > Privacy & Security > Screen Recording
+- Relaunch the app after granting permission
+
+**Linux: AppImage won't run**
+- Ensure FUSE is installed: `sudo apt install fuse libfuse2`
+- Make executable: `chmod +x Screen-Recorder-*.AppImage`
+
+**Linux: No screen sources detected**
+- On Wayland, ensure `xdg-desktop-portal` and `xdg-desktop-portal-gnome` (or equivalent) are installed
+- PipeWire is required for screen capture on modern Wayland desktops

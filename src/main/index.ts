@@ -5,6 +5,7 @@ import { createTray } from './tray';
 import squirrelStartup from 'electron-squirrel-startup';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
+// electron-squirrel-startup returns false on non-Windows platforms.
 if (squirrelStartup) {
   app.quit();
 }

@@ -1,6 +1,6 @@
 import sharp from 'sharp';
 import pngToIco from 'png-to-ico';
-import { readFile, writeFile } from 'fs/promises';
+import { readFile, writeFile, copyFile } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -9,7 +9,8 @@ const __dirname = dirname(__filename);
 
 const ICONS_DIR = join(__dirname, '../assets/icons');
 const SVG_PATH = join(ICONS_DIR, 'screen-recorder-icon.svg');
-const SIZES = [16, 32, 48, 64, 128, 256, 512];
+// Include 1024 for macOS Retina displays
+const SIZES = [16, 32, 48, 64, 128, 256, 512, 1024];
 
 async function generateIcons() {
   console.log('Reading SVG file...');
@@ -29,6 +30,10 @@ async function generateIcons() {
     pngPaths.push(outputPath);
   }
 
+  // Generate a generic icon.png (512x512) used by electron-builder for macOS/Linux
+  console.log('Generating icon.png (512x512)...');
+  await copyFile(join(ICONS_DIR, 'icon-512.png'), join(ICONS_DIR, 'icon.png'));
+
   // Generate ICO file from PNG files (use 16, 32, 48, 256 for ICO)
   console.log('Generating ICO file...');
   const icoSizes = [16, 32, 48, 256];
@@ -42,8 +47,10 @@ async function generateIcons() {
   for (const size of SIZES) {
     console.log(`  - icon-${size}.png`);
   }
-  console.log('  - icon.ico');
-  console.log('\nDone!');
+  console.log('  - icon.png (512x512, for macOS/Linux)');
+  console.log('  - icon.ico (Windows)');
+  console.log('\nNote: electron-builder will auto-convert icon-512.png to .icns for macOS.');
+  console.log('Done!');
 }
 
 generateIcons().catch(err => {

@@ -34,6 +34,7 @@
 <li><a href="#publishing-to-github-releases">Publishing to GitHub Releases</a></li>
 <li><a href="#user-installation-guide">User Installation Guide</a></li>
 <li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#cross-platform-deployment-v110">Cross-Platform Deployment (v1.1.0+)</a></li>
 </ul>
 <hr>
 <h2 id="prerequisites">Prerequisites </h2>
@@ -108,6 +109,8 @@
   <span class="token property">"version"</span><span class="token operator">:</span> <span class="token string">"1.1.0"</span><span class="token punctuation">,</span>  <span class="token comment">// &lt;-- Update this</span>
   ...
 <span class="token punctuation">}</span>
+</code></pre><p>Also update <code>src/shared/constants.ts</code>:</p>
+<pre data-role="codeBlock" data-info="ts" class="language-ts ts"><code><span class="token keyword keyword-export">export</span> <span class="token keyword keyword-const">const</span> <span class="token constant">APP_VERSION</span> <span class="token operator">=</span> <span class="token string">'1.1.0'</span><span class="token punctuation">;</span>  <span class="token comment">// &lt;-- Keep in sync</span>
 </code></pre><p>Follow <a href="https://semver.org/">Semantic Versioning</a>:</p>
 <ul>
 <li><strong>MAJOR</strong> (1.0.0 → 2.0.0): Breaking changes</li>
@@ -215,15 +218,15 @@
 </ul>
 </li>
 </ol>
-<h3 id="automated-releases-optional">Automated Releases (Optional) </h3>
-<p>See the GitHub Actions workflow in <code>.github/workflows/release.yml</code> for automated builds on version tags.</p>
+<h3 id="automated-releases-via-github-actions">Automated Releases (via GitHub Actions) </h3>
+<p>The CI/CD pipeline in <code>.github/workflows/release.yml</code> automatically builds for all platforms when you push a version tag. See the <a href="#cross-platform-deployment-v110">Cross-Platform Deployment</a> section below.</p>
 <hr>
 <h2 id="user-installation-guide">User Installation Guide </h2>
 <p>Share these instructions with users:</p>
 <h3 id="downloading">Downloading </h3>
 <ol>
 <li>Go to the <a href="https://github.com/Wasaanyi/screen_recorder/releases">Releases page</a></li>
-<li>Download <code>Screen.Recorder.Setup.x.x.x.exe</code> from the latest release</li>
+<li>Download the installer for your platform from the latest release</li>
 </ol>
 <h3 id="installing">Installing </h3>
 <ol>
@@ -369,17 +372,162 @@
 <p>Add update check code to main process</p>
 </li>
 </ol>
-<h3 id="multi-platform-builds">Multi-Platform Builds </h3>
-<p>To build for macOS and Linux, update <code>package.json</code>:</p>
-<pre data-role="codeBlock" data-info="json" class="language-json json"><code><span class="token property">"mac"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
-  <span class="token property">"target"</span><span class="token operator">:</span> <span class="token string">"dmg"</span><span class="token punctuation">,</span>
-  <span class="token property">"category"</span><span class="token operator">:</span> <span class="token string">"public.app-category.video"</span>
-<span class="token punctuation">}</span><span class="token punctuation">,</span>
-<span class="token property">"linux"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
-  <span class="token property">"target"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">"AppImage"</span><span class="token punctuation">,</span> <span class="token string">"deb"</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
-  <span class="token property">"category"</span><span class="token operator">:</span> <span class="token string">"Video"</span>
-<span class="token punctuation">}</span>
-</code></pre><p>Note: macOS builds require Apple Developer account for notarization.</p>
+<hr>
+<h2 id="cross-platform-deployment-v110">Cross-Platform Deployment (v1.1.0+) </h2>
+<p>This section covers the steps to push the v1.1.0 release with macOS and Linux support. Since you've already pushed v1.0.0, follow these steps for the update.</p>
+<h3 id="what-changed-in-v110">What Changed in v1.1.0 </h3>
+<ul>
+<li>macOS packaging (DMG + ZIP for Intel x64 and Apple Silicon arm64)</li>
+<li>Linux packaging (AppImage + .deb for x64)</li>
+<li>Platform-specific output paths (macOS uses <code>~/Movies</code>)</li>
+<li>macOS entitlements for screen recording and camera access</li>
+<li>macOS tray icon template image support</li>
+<li>Linux transparent window compositor hints</li>
+<li>Multi-platform CI/CD pipeline (builds on Windows, macOS, and Linux runners)</li>
+<li>Updated icons (added 1024px for macOS Retina)</li>
+</ul>
+<h3 id="step-1-verify-everything-builds-locally">Step 1: Verify Everything Builds Locally </h3>
+<pre data-role="codeBlock" data-info="bash" class="language-bash bash"><code><span class="token comment"># Clean old build artifacts</span>
+<span class="token function">rm</span> <span class="token parameter variable">-rf</span> dist dist-electron release
+
+<span class="token comment"># Build the app</span>
+<span class="token function">npm</span> run build:app
+
+<span class="token comment"># Test Windows packaging still works</span>
+<span class="token function">npm</span> run package
+</code></pre><p>Verify the Windows installer at <code>release/1.1.0/</code> launches and works correctly.</p>
+<h3 id="step-2-commit-all-changes">Step 2: Commit All Changes </h3>
+<pre data-role="codeBlock" data-info="bash" class="language-bash bash"><code><span class="token comment"># Check what's changed</span>
+<span class="token function">git</span> status
+
+<span class="token comment"># Stage all the modified and new files</span>
+<span class="token function">git</span> <span class="token function">add</span> package.json
+<span class="token function">git</span> <span class="token function">add</span> src/shared/constants.ts
+<span class="token function">git</span> <span class="token function">add</span> src/main/index.ts
+<span class="token function">git</span> <span class="token function">add</span> src/main/windows.ts
+<span class="token function">git</span> <span class="token function">add</span> src/main/tray.ts
+<span class="token function">git</span> <span class="token function">add</span> src/main/ipc-handlers.ts
+<span class="token function">git</span> <span class="token function">add</span> scripts/generate-icons.js
+<span class="token function">git</span> <span class="token function">add</span> scripts/afterPack.js
+<span class="token function">git</span> <span class="token function">add</span> build/entitlements.mac.plist
+<span class="token function">git</span> <span class="token function">add</span> assets/icons/icon-1024.png
+<span class="token function">git</span> <span class="token function">add</span> assets/icons/icon.png
+<span class="token function">git</span> <span class="token function">add</span> .github/workflows/release.yml
+<span class="token function">git</span> <span class="token function">add</span> README.md
+<span class="token function">git</span> <span class="token function">add</span> CLAUDE.md
+<span class="token function">git</span> <span class="token function">add</span> DEPLOYMENT.md
+
+<span class="token comment"># Commit</span>
+<span class="token function">git</span> commit <span class="token parameter variable">-m</span> <span class="token string">"feat: add macOS and Linux packaging support
+
+- Add mac (DMG/ZIP) and linux (AppImage/deb) build targets
+- Add macOS entitlements for screen recording, camera, microphone
+- Add afterPack script to set FFmpeg binary permissions on unix
+- Fix default output path for macOS (~/Movies/Screen Recordings)
+- Fix tray icon for macOS template image rendering
+- Fix overlay window transparency on Linux
+- Update CI/CD to build on all 3 platforms in parallel
+- Update icons with 1024px for macOS Retina
+- Bump version to 1.1.0"</span>
+</code></pre><h3 id="step-3-push-to-github">Step 3: Push to GitHub </h3>
+<pre data-role="codeBlock" data-info="bash" class="language-bash bash"><code><span class="token function">git</span> push origin master
+</code></pre><h3 id="step-4-tag-and-trigger-ci-build">Step 4: Tag and Trigger CI Build </h3>
+<pre data-role="codeBlock" data-info="bash" class="language-bash bash"><code><span class="token comment"># Create the version tag</span>
+<span class="token function">git</span> tag <span class="token parameter variable">-a</span> v1.1.0 <span class="token parameter variable">-m</span> <span class="token string">"Release v1.1.0 - macOS and Linux support"</span>
+
+<span class="token comment"># Push the tag (this triggers the GitHub Actions workflow)</span>
+<span class="token function">git</span> push origin v1.1.0
+</code></pre><p>Once the tag is pushed, GitHub Actions will automatically:</p>
+<ol>
+<li>Build Windows installer on <code>windows-latest</code></li>
+<li>Build macOS DMG/ZIP on <code>macos-latest</code></li>
+<li>Build Linux AppImage/deb on <code>ubuntu-latest</code></li>
+<li>Create a GitHub Release with all platform installers attached</li>
+</ol>
+<h3 id="step-5-monitor-the-ci-build">Step 5: Monitor the CI Build </h3>
+<ol>
+<li>Go to your repository on GitHub</li>
+<li>Click <strong>Actions</strong> tab</li>
+<li>Watch the "Build and Release" workflow</li>
+<li>All 3 platform builds should complete (expect ~10-15 minutes)</li>
+</ol>
+<p>If a platform build fails:</p>
+<ul>
+<li>Click into the failed job to see logs</li>
+<li>Common issues:
+<ul>
+<li><strong>macOS</strong>: Icon conversion failures (ensure <code>icon-512.png</code> exists)</li>
+<li><strong>Linux</strong>: Missing system dependencies (the Ubuntu runner should have everything)</li>
+<li><strong>Windows</strong>: NSIS errors (usually self-resolving on retry)</li>
+</ul>
+</li>
+</ul>
+<h3 id="step-6-verify-the-release">Step 6: Verify the Release </h3>
+<ol>
+<li>Go to <strong>Releases</strong> on your GitHub repository</li>
+<li>Confirm <code>v1.1.0</code> release was created with all these artifacts:
+<ul>
+<li><code>Screen.Recorder.Setup.1.1.0.exe</code> (Windows)</li>
+<li><code>Screen-Recorder-1.1.0.dmg</code> (macOS)</li>
+<li><code>Screen-Recorder-1.1.0-mac.zip</code> (macOS)</li>
+<li><code>Screen-Recorder-1.1.0.AppImage</code> (Linux)</li>
+<li><code>screen-recorder_1.1.0_amd64.deb</code> (Linux)</li>
+</ul>
+</li>
+<li>Download and test on each platform if possible</li>
+</ol>
+<h3 id="macos-code-signing-optional-but-recommended">macOS Code Signing (Optional but Recommended) </h3>
+<p>Without code signing, macOS users will see a Gatekeeper warning. To sign:</p>
+<ol>
+<li>
+<p><strong>Get an Apple Developer account</strong> ($99/year at <a href="https://developer.apple.com">developer.apple.com</a>)</p>
+</li>
+<li>
+<p><strong>Create a Developer ID Application certificate</strong> in Xcode or the Apple Developer portal</p>
+</li>
+<li>
+<p><strong>Add secrets to GitHub repository</strong> (Settings &gt; Secrets and variables &gt; Actions):</p>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>CSC_LINK          = base64-encoded .p12 certificate
+CSC_KEY_PASSWORD   = certificate password
+APPLE_ID           = your@apple.id
+APPLE_APP_SPECIFIC_PASSWORD = app-specific password from appleid.apple.com
+APPLE_TEAM_ID      = your team ID
+</code></pre></li>
+<li>
+<p><strong>Update the macOS CI step</strong> in <code>.github/workflows/release.yml</code>:</p>
+<pre data-role="codeBlock" data-info="yaml" class="language-yaml yaml"><code><span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Build and package
+  <span class="token key atrule">run</span><span class="token punctuation">:</span> npm run build<span class="token punctuation">:</span>app <span class="token important">&amp;&amp;</span> npm run package<span class="token punctuation">:</span>mac
+  <span class="token key atrule">env</span><span class="token punctuation">:</span>
+    <span class="token key atrule">GH_TOKEN</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.GITHUB_TOKEN <span class="token punctuation">}</span><span class="token punctuation">}</span>
+    <span class="token key atrule">CSC_LINK</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.CSC_LINK <span class="token punctuation">}</span><span class="token punctuation">}</span>
+    <span class="token key atrule">CSC_KEY_PASSWORD</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.CSC_KEY_PASSWORD <span class="token punctuation">}</span><span class="token punctuation">}</span>
+    <span class="token key atrule">APPLE_ID</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.APPLE_ID <span class="token punctuation">}</span><span class="token punctuation">}</span>
+    <span class="token key atrule">APPLE_APP_SPECIFIC_PASSWORD</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.APPLE_APP_SPECIFIC_PASSWORD <span class="token punctuation">}</span><span class="token punctuation">}</span>
+    <span class="token key atrule">APPLE_TEAM_ID</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.APPLE_TEAM_ID <span class="token punctuation">}</span><span class="token punctuation">}</span>
+</code></pre><p>electron-builder will automatically sign and notarize when these env vars are present.</p>
+</li>
+</ol>
+<h3 id="platform-specific-troubleshooting">Platform-Specific Troubleshooting </h3>
+<p><strong>macOS: "Screen Recorder is damaged and can't be opened"</strong></p>
+<ul>
+<li>This happens with unsigned apps. Users need to: <code>xattr -cr /Applications/Screen\ Recorder.app</code></li>
+<li>Or right-click &gt; Open &gt; Open (bypasses Gatekeeper once)</li>
+</ul>
+<p><strong>macOS: Screen recording permission not working</strong></p>
+<ul>
+<li>The app must be added to System Settings &gt; Privacy &amp; Security &gt; Screen Recording</li>
+<li>Relaunch the app after granting permission</li>
+</ul>
+<p><strong>Linux: AppImage won't run</strong></p>
+<ul>
+<li>Ensure FUSE is installed: <code>sudo apt install fuse libfuse2</code></li>
+<li>Make executable: <code>chmod +x Screen-Recorder-*.AppImage</code></li>
+</ul>
+<p><strong>Linux: No screen sources detected</strong></p>
+<ul>
+<li>On Wayland, ensure <code>xdg-desktop-portal</code> and <code>xdg-desktop-portal-gnome</code> (or equivalent) are installed</li>
+<li>PipeWire is required for screen capture on modern Wayland desktops</li>
+</ul>
 </div>
       </div>
       

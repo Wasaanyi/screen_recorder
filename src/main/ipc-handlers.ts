@@ -3,11 +3,23 @@ import { IPC_CHANNELS } from '../shared/ipc-channels';
 import { startRecording, stopRecording, pauseRecording, resumeRecording, handleRecordingChunk } from './recorder';
 import { createOverlayWindow, createWebcamWindow, closeOverlayWindow, closeWebcamWindow, createEditorWindow } from './windows';
 import type { RecordingSettings, ScreenSource } from '../shared/types';
-import { homedir } from 'os';
+import { homedir, platform } from 'os';
 import { join } from 'path';
 
+function getDefaultOutputPath(): string {
+  const home = homedir();
+  switch (platform()) {
+    case 'darwin':
+      return join(home, 'Movies', 'Screen Recordings');
+    case 'win32':
+      return join(home, 'Videos', 'Screen Recordings');
+    default:
+      return join(home, 'Videos', 'Screen Recordings');
+  }
+}
+
 let currentSettings: RecordingSettings = {
-  outputPath: join(homedir(), 'Videos', 'Screen Recordings'),
+  outputPath: getDefaultOutputPath(),
   videoQuality: 'medium',
   fps: 30,
   audioSource: null,
