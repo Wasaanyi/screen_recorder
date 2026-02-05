@@ -13,7 +13,14 @@
       "Bash(npx tsc:*)",
       "Bash(npm run build:app:*)",
       "Bash(npx electron-builder:*)",
-      "Bash(node scripts/generate-icons.js:*)"
+      "Bash(node scripts/generate-icons.js:*)",
+      "Bash(npm run package:*)",
+      "Bash(tasklist:*)",
+      "Bash(cmd //c \"rmdir /s /q D:\\\\EBED\\\\Business\\\\Developments\\\\screen_recorder\\\\release\")",
+      "Bash(powershell:*)",
+      "Bash(cmd //c \"rename D:\\\\EBED\\\\Business\\\\Developments\\\\screen_recorder\\\\release release_old\")",
+      "WebSearch",
+      "WebFetch(domain:www.electron.build)"
     ]
   }
 }
