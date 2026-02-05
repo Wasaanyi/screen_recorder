@@ -1,5 +1,5 @@
 export const APP_NAME = 'Screen Recorder';
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.1.1';
 
 export const WINDOW_SIZES = {
   CONTROL: {
